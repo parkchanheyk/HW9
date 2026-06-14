@@ -160,7 +160,7 @@ void AMyGameModeBase::PrintChatMessageString(AMyPlayerController* InChattingPlay
 		{
 			if (AllPlayerControllers[CurrentPlayerIndex] != InChattingPlayerController)
 			{
-				// 내 차례가 아닌데 숫자를 입력했다면 당사자에게 경고
+				// 내 차례가 아닌데 숫자를 입력했다면 리턴
 				InChattingPlayerController->ClientRPCPrintChatMessageString(TEXT("It is not your turn yet!"));
 				return;
 			}
@@ -173,17 +173,15 @@ void AMyGameModeBase::PrintChatMessageString(AMyPlayerController* InChattingPlay
 		bHasRemainingGuesses = MyPS->CurrentGuessCount < MyPS->MaxGuessCount;
 	}
 
-	// 1. 야구 게임 입력인 경우
+	// 야구 게임 입력인 경우
 	if (bIsGameStarted == true && bHasRemainingGuesses == true && IsGuessNumberString(GuessNumberString) == true)
 	{
-		// 먼저 횟수를 증가시킵니다. (이로써 0/3 이었던 상태가 1/3 로 정상 반영됨)
 		IncreaseGuessCount(InChattingPlayerController);
 		
-		// 증가된 횟수가 반영된 최신 플레이어 정보를 가져와서 문자열을 조립합니다.
 		FString PlayerInfoString = MyPS->GetPlayerInfoString();
 		FString JudgeResultString = JudgeResult(SecretNumberString, GuessNumberString);
 		
-		// 최종 출력 문자열 (예: "Player1(1/3): 123 -> 1S0B")
+		// 최종 출력 문자열
 		FString CombinedMessageString = PlayerInfoString + TEXT(": ") + GuessNumberString + TEXT(" : ") + JudgeResultString;
 		
 		for (TActorIterator<AMyPlayerController> It(GetWorld()); It; ++It)
@@ -195,7 +193,7 @@ void AMyGameModeBase::PrintChatMessageString(AMyPlayerController* InChattingPlay
 			}
 		}
 
-		// (버그 수정) 판정 함수는 루프 밖에서 한 번만 호출되도록 수정했습니다.
+		//판정 함수
 		int32 StrikeCount = FCString::Atoi(*JudgeResultString.Left(1));
 		JudgeGame(InChattingPlayerController, StrikeCount);
 		
@@ -204,7 +202,8 @@ void AMyGameModeBase::PrintChatMessageString(AMyPlayerController* InChattingPlay
 			SetNextTurn();
 		}
 	}
-	// 2. 일반 채팅이거나 횟수를 초과한 경우
+	
+	//  일반 채팅이거나 횟수를 초과한 경우
 	else
 	{
 		FString PlayerInfoString = IsValid(MyPS) ? MyPS->GetPlayerInfoString() : TEXT("Unknown");
@@ -262,7 +261,7 @@ void AMyGameModeBase::ResetGame()
 			StartNewTurn();
 		}, 
 		DelayTime, 
-		false // 반복 여부 (단발성)
+		false 
 	);
 }
 
@@ -349,13 +348,10 @@ void AMyGameModeBase::StartTurnTimer()
 	AMyGameStateBase* MyGS = GetGameState<AMyGameStateBase>();
 	if (IsValid(MyGS))
 	{
-		// GameState의 복제 변수를 최대 시간(30초)으로 세팅합니다.
 		MyGS->RemainingTurnTime = MaxTurnTime;
 	}
-
-	// 돌고 있던 타이머가 있다면 안전하게 끄고 새로 시작합니다.
+	
 	GetWorldTimerManager().ClearTimer(TurnTimerHandle);
-	// 1초마다 UpdateTurnTime 함수를 반복(true) 호출합니다.
 	GetWorldTimerManager().SetTimer(TurnTimerHandle, this, &AMyGameModeBase::UpdateTurnTime, 1.0f, true);
 }
 
@@ -366,8 +362,7 @@ void AMyGameModeBase::UpdateTurnTime()
 	if (!IsValid(MyGS)) return;
 
 	MyGS->RemainingTurnTime -= 1.0f;
-
-	// 0초에 도달하면 타이머를 해제하고 타임아웃 액션을 취합니다.
+	
 	if (MyGS->RemainingTurnTime <= 0.0f)
 	{
 		GetWorldTimerManager().ClearTimer(TurnTimerHandle);
@@ -375,18 +370,16 @@ void AMyGameModeBase::UpdateTurnTime()
 	}
 }
 
-void AMyGameModeBase::OnTurnTimeOut()
+void AMyGameModeBase::OnTurnTimeOut() // 시간 초과
 {
 	AMyPlayerController* CurrentPC = nullptr;
 	
-	// 1. 현재 턴을 진행 중이던 플레이어를 찾습니다.
 	if (AllPlayerControllers.IsValidIndex(CurrentPlayerIndex) == true)
 	{
 		CurrentPC = AllPlayerControllers[CurrentPlayerIndex];
 		
 		if (IsValid(CurrentPC) == true)
 		{
-			// ⭐️ [핵심 해결]: 타임아웃된 플레이어의 기회 횟수를 차감(1 증가)시킵니다.
 			IncreaseGuessCount(CurrentPC);
 		}
 	}
@@ -398,15 +391,11 @@ void AMyGameModeBase::OnTurnTimeOut()
 			PC->ClientRPCPrintChatMessageString(TEXT("Time Out! Turn Switched."));
 		}
 	}
-
-	// 3. 기회가 소진되었으므로, 모든 유저의 기회가 바닥나서 '무승부' 상황이 되었는지 판정합니다.
 	if (IsValid(CurrentPC) == true)
 	{
-		// 타임아웃이므로 0스트라이크 상태로 판정 함수를 넘겨 무승부(Draw) 여부만 체크하게 합니다.
 		JudgeGame(CurrentPC, 0); 
 	}
-
-	// 4. 만약 방금 무승부가 판정되어 게임 리셋(3초 딜레이)이 진행 중이 아니라면 다음 턴으로 넘깁니다.
+	
 	if (GetWorldTimerManager().IsTimerActive(ResetGameTimerHandle) == false)
 	{
 		SetNextTurn();

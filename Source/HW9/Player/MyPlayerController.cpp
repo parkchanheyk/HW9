@@ -132,8 +132,6 @@ void AMyPlayerController::UpdateNotificationUI()
 
 	if (IsValid(NotificationTextWidgetInstance) == true)
 	{
-		// ⭐️ [수정]: 턴 메시지("GameStart", "Player1's Turn!")는 
-		// BaseballResultText가 아닌, 턴 전용 함수인 ShowTurnMessage로만 보냅니다.
 		NotificationTextWidgetInstance->ShowTurnMessage(NotificationText.ToString());
 	}
 }
@@ -141,18 +139,14 @@ void AMyPlayerController::UpdateNotificationUI()
 void AMyPlayerController::UpdateTurnTimerUI(float NewTime)
 {
 	if (IsLocalController() == false) return;
-
-	// 1. ⭐️ [시간 표시 UI 제어]: NotificationTextWidgetInstance에 지시합니다.
+	
 	if (IsValid(NotificationTextWidgetInstance) == true)
 	{
-		// 헤더에 UFUNCTION으로 선언했기 때문에 C++에서 다이렉트로 호출할 수 있습니다!
 		NotificationTextWidgetInstance->RefreshTimerUI(NewTime);
 	}
-
-	// 2. ⭐️ [채팅창 잠금 제어]: ChatInputWidgetInstance 내부의 텍스트 박스에 직접 접근합니다.
+	
 	if (IsValid(ChatInputWidgetInstance) == true)
 	{
-		// C++에 바인딩된 텍스트 박스 포인터를 가져옵니다.
 		UEditableTextBox* ChatInputBox = ChatInputWidgetInstance->EditableTextBox_ChatInput;
 		
 		if (IsValid(ChatInputBox) == true)
@@ -164,7 +158,7 @@ void AMyPlayerController::UpdateTurnTimerUI(float NewTime)
 			}
 			else
 			{
-				// 시간이 남아있으면 활성화 (GetIsEnabled() 사용으로 경고 해결)
+				// 시간이 남아있으면 활성화
 				if (ChatInputBox->GetIsEnabled() == false)
 				{
 					ChatInputBox->SetIsEnabled(true);

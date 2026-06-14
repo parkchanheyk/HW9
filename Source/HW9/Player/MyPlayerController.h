@@ -54,15 +54,13 @@ protected:
 	FString ChatMessageString;
 
 public:
-	// ⭐️ 수정: Replicated를 ReplicatedUsing으로 변경하여 Notify 함수를 지정합니다.
+	
 	UPROPERTY(ReplicatedUsing = OnRep_NotificationText, BlueprintReadOnly)
 	FText NotificationText;
-
-	// ⭐️ [새로 추가] 서버로부터 NotificationText를 복제받았을 때 UI를 동기화할 갱신 함수
+	
 	UFUNCTION()
 	void OnRep_NotificationText();
-
-	// ⭐️ [새로 추가] 현재 NotificationText 변수의 값을 위젯 텍스트 박스에 강제로 적용하는 헬퍼 함수
+	
 	void UpdateNotificationUI();
 	
 	void UpdateTurnTimerUI(float NewTime);
