@@ -15,8 +15,7 @@ HW9/
 │   │   ├── HW9.Build.cs     # 모듈 빌드 설정
 │   │   ├── GameMode/        # 게임모드 및 상태 관리 (GameMode, GameState)
 │   │   ├── Character/       # 플레이어 캐릭터 및 복제(Replication) 로직
-│   │   ├── Controller/      # 플레이어 컨트롤러 및 UI 연동
-│   │   └── Weapon/          # (선택) 멀티플레이어 동기화가 적용된 무기/아이템 클래스
+│   │   ├── Controller/      # 플레이어 컨트롤러 및 UI 연동        
 ├── HW9.uproject             # 언리얼 프로젝트 파일
 └── README.md                # 프로젝트 설명 문서
 ```
